@@ -11,51 +11,35 @@ let encodedImage;
 
 let decodebtn = document.getElementById("decodebtn")
 let decodeimage1fileinput = document.getElementById("decodeimage1")
-let decodeimage2fileinput = document.getElementById("decodeimage2")
 
+let encodePass = document.getElementById("passphrase1")
+let decodePass = document.getElementById("passphrase2")
 
 let decodeimage1;
-let decodeimage2;
 
 
 encodebtn.addEventListener("click", e => {
     console.log("encoding...")
     encodebtn.classList.add("disbaled")
+    
     // load image from encodeimage1fileinput and display in canvasbox
     // Check if a file is selected
     if (encodeimage1fileinput.files && encodeimage1fileinput.files[0]) {
         // Use p5.js loadImage function to load the image
         loadedImage = loadImage(URL.createObjectURL(encodeimage1fileinput.files[0]), () => {
-            // Draw the loaded image to the canvasbox div
-            //   createCanvas(loadedImage.width, loadedImage.height).parent('canvasbox');
-            //    image(loadedImage, 0, 0);
 
             loadedImage.loadPixels();
-            console.log("Pixel data:", loadedImage.pixels);
-
-
 
             // Get the text to hide
             let secretText = secretTextField.value;
-            console.log("secret message:", secretText)
 
             // Encode the message in the image
             encodedImage = createImage(loadedImage.width, loadedImage.height);
             encodedImage.copy(loadedImage, 0, 0, loadedImage.width, loadedImage.height, 0, 0, loadedImage.width, loadedImage.height);
 
             encodedImage.loadPixels()
-            console.log("Pixel data:", encodedImage.pixels);
-
             // Encode the message in the image
             encodeMessage(encodedImage, secretText);
-
-            // Display the modified image
-            //  createCanvas(encodedImage.width, encodedImage.height).parent('canvasbox');
-            //  image(encodedImage, 0, 0);
-
-
-            // force download the encodedimage
-
             downloadEncodedImage(encodedImage, 'encoded_image.jpg');
 
 
@@ -69,41 +53,22 @@ decodebtn.addEventListener("click", e => {
     console.log("decoding...")
     decodebtn.classList.add("disbaled")
 
-
     //load images - first one is original and second one with message. compare them and find the message inside
     // Check if both files are selected
-    if (decodeimage1fileinput.files && decodeimage1fileinput.files[0] && decodeimage2fileinput.files && decodeimage2fileinput.files[0]) {
+    if (decodeimage1fileinput.files && decodeimage1fileinput.files[0] ) {
         // Load the two images
-        loadImage(URL.createObjectURL(decodeimage1fileinput.files[0]), img1 => {
-            loadImage(URL.createObjectURL(decodeimage2fileinput.files[0]), img2 => {
-                // Display the original image
-                // createCanvas(img1.width, img1.height).parent('canvasbox');
-                //   image(img1, 0, 0);
-
-                // Display the image with the hidden message
-                //   createCanvas(img2.width, img2.height).parent('canvasbox');
-                //   image(img2, 0, 0);
+        loadImage(URL.createObjectURL(decodeimage1fileinput.files[0]), img1 => { // Original image
+            
 
                 img1.loadPixels()
-                img2.loadPixels()
-                console.log("image 1:", img1)
-                console.log("image 2:", img2)
 
                 // Decode the hidden message
                 let decodedMessage = decodeMessage(img1);
-                console.log("Decoded Message:", decodedMessage);
-
-
-                // Enable the decode button after decoding
-                //    decodebtn.classList.remove("disabled");
-
-
                 secretTextField.value = decodedMessage
-
-            });
+            
         });
     } else {
-        alert("Please select both image files.");
+        alert("Please select an image files.");
     }
 
 })
@@ -120,8 +85,9 @@ function draw() {
 
 // Function to encode the message by modifying color channels
 function encodeMessage(img, message) {
+    message = checkIfPassphraseExists(message, encodePass.value)
     let binaryMessage = textToBinary(message);
-    console.log("Binary Message:", binaryMessage);
+    
 
     // Calculate the number of pixels needed to store the message
     let numPixels = Math.ceil(binaryMessage.length / 3); // Each pixel stores 3 bits (1 per channel)
@@ -192,6 +158,16 @@ function encodeMessage(img, message) {
 
 }
 
+function checkIfPassphraseExists(message, passphrase){
+    if(passphrase.length > 0){
+        // add '$' to the start and end of the passphrase
+        passphrase = ">>" + passphrase + "<<"
+        message = passphrase + message 
+        
+    }
+    return message
+}
+
 // Helper function to convert text to binary
 function textToBinary(text) {
     return text.split('').map(char => {
@@ -223,7 +199,7 @@ function downloadEncodedImage(img, filename) {
 // Function to decode the message by comparing color channels
 function decodeMessage(img) {
     img.loadPixels(); // Load the image's pixel data
-
+    
     let binaryMessage = "";
     let numPixels = img.pixels.length / 4; // Number of pixels in the image
 
@@ -242,6 +218,24 @@ function decodeMessage(img) {
         console.log("there is no message in the image");
         return "No message found in the image";
     }
+
+    // check if image for decode contains passphrase by
+    // compare if image contains passphrase
+    let flag = checkForPassphraseMarker(img)
+    if(decodePass.value.length < 1){
+        if(flag){
+            return "Error: Passphrase is required"
+        }
+    }
+
+    if(flag && decodePass.value.length > 0){
+        let isCorrect = comparePass(img, decodePass.value)
+        if(!isCorrect){
+            return "Error: Passphrase does not match"
+        }
+    }
+    
+    
     
     for (let i = 0; i < numPixels; i++) {
         if (foundEndMarker) break;
@@ -286,8 +280,13 @@ function decodeMessage(img) {
         if (byte.length < 8) break; // Ensure we have a complete byte
         textMessage += String.fromCharCode(parseInt(byte, 2)); // Convert binary to text
     }
+    // remove passphrase markers
+    if(flag){
+        textMessage = textMessage.slice(2, textMessage.length)
+        textMessage = textMessage.replace(decodePass.value, "") 
+        textMessage = textMessage.slice(2, textMessage.length)
+    }
 
-    console.log("Decoded Message:", textMessage);
     return textMessage;
 }
 
@@ -300,4 +299,69 @@ function binaryToText(binary) {
         text += String.fromCharCode(parseInt(byte, 2)); // Convert binary to text
     }
     return text;
+}
+
+
+function comparePass(img, inputPassphrase) {
+    img.loadPixels(); // Load the image's pixel data
+    let flag = false;
+    
+    let binaryMessage = "";
+    let passphraseMarkerStart = ">>";
+    let passphraseMarkerEnd = "<<";
+    let passphraseMarkerLength = (passphraseMarkerStart.length + passphraseMarkerEnd.length + inputPassphrase.length) * 8; // Total bits for passphrase with markers
+
+    let binaryIndex = 0;
+
+    // Decode message until we reach the expected length of the passphrase (with markers)
+    for (let i = 0; binaryIndex < passphraseMarkerLength && i < img.pixels.length; i += 4) {
+        // Extract the RGB channels and get the least significant bit (LSB) from each
+        let r = img.pixels[i] & 1;
+        let g = img.pixels[i + 1] & 1;
+        let b = img.pixels[i + 2] & 1;
+
+        binaryMessage += r.toString() + g.toString() + b.toString();
+        binaryIndex += 3; // We've processed 3 bits
+    }
+
+    // Convert the binary data to text
+    let decodedPassphrase = binaryToText(binaryMessage);
+
+    // Add markers to input passphrase
+    inputPassphrase = passphraseMarkerStart + inputPassphrase + passphraseMarkerEnd;
+
+    // Compare decoded passphrase with input passphrase
+    if (decodedPassphrase.startsWith(inputPassphrase)) {
+        flag = true;
+    }
+    
+    return flag;
+}
+
+
+function checkForPassphraseMarker(img) {
+    img.loadPixels(); // Load the image's pixel data
+
+    let binaryMessage = "";
+    let passphraseMarker = ">>";
+    let passphraseMarkerLength = passphraseMarker.length * 8; // Each character is 8 bits
+
+    let binaryIndex = 0;
+
+    // Decode only enough pixels to check for the ">>" pattern (2 characters = 16 bits)
+    for (let i = 0; binaryIndex < passphraseMarkerLength && i < img.pixels.length; i += 4) {
+        // Extract the RGB channels and get the least significant bit (LSB) from each
+        let r = img.pixels[i] & 1;
+        let g = img.pixels[i + 1] & 1;
+        let b = img.pixels[i + 2] & 1;
+
+        binaryMessage += r.toString() + g.toString() + b.toString();
+        binaryIndex += 3; // We've processed 3 bits
+    }
+
+    // Convert the binary data to text (only the first 16 bits to check for ">>")
+    let decodedSnippet = binaryToText(binaryMessage.slice(0, passphraseMarkerLength));
+
+    // Return true if the decoded snippet starts with ">>", otherwise false
+    return decodedSnippet.startsWith(passphraseMarker);
 }
