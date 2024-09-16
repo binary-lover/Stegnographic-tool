@@ -23,30 +23,31 @@
 </head>
 
 <body>
-    <div class="container">
+    <nav class="navbar navbar-expand-lg  mb-3 border border-light 
+    ">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Steganography App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <a class="nav-link active" aria-current="page" href="#">Home</a>
 
-        <nav class="navbar navbar-expand-lg bg-body-tertiary mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">Steganography App</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                    <div class="navbar-nav">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
-
-                    </div>
                 </div>
             </div>
-        </nav>
+        </div>
+    </nav>
+    <div class="container">
 
 
+        <div class="row shadow p-3 mb-5 bg-body rounded
+         ">
 
-        <div class="row">
-
-            <div class="col-md-4">
+            <div class="col-md-4 border border-light 
+            ">
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="home-tab" data-bs-toggle="tab"
@@ -74,11 +75,11 @@
                             <div class="mb-3">
                                 <label for="passphrase1" class="form-label">Passphrase </label>
 
-                                <input type="text" class="form-control" id="passphrase1">
+                                <input type="text" class="form-control textarea-shadow" id="passphrase1">
                             </div>
 
 
-                            <button id="encodebtn" type="button" class="btn btn-primary">Encode</button>
+                            <button id="encodebtn" type="button" class="btn btn-primary ">Encode</button>
 
                         </div>
 
@@ -98,7 +99,7 @@
                             <div class="mb-3">
                                 <label for="passphrase2" class="form-label">Passphrase</label>
 
-                                <input type="text" class="form-control" id="passphrase2">
+                                <input type="text" class="form-control textarea-shadow" id="passphrase2">
                             </div>
 
 
@@ -112,11 +113,13 @@
             </div>
             <div class="col-md-8">
 
-                <div class="card">
+                <div class="card shadow-sm
+                 p-3 mb-1 bg-body rounded">
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="secretText" class="form-label">Secret text</label>
-                            <textarea class="form-control" id="secretText" rows="3"></textarea>
+                            <textarea class="form-control textarea-shadow
+                            " id="secretText" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
